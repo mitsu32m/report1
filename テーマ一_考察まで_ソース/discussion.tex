@@ -1,0 +1,67 @@
+\clearpage
+\section{考察}
+
+\subsection{QUBE Integration 実験}
+エンコーダは1回転で2048カウントとなるため，1カウント当たりの角度は
+\begin{equation}
+ g_{\mathrm{deg}}=\frac{360^{\circ}}{2048}
+ =0.17578125^{\circ}/\mathrm{count}
+ \label{eq:discgain}
+\end{equation}
+である。この値をエンコーダのカウント $n$ に掛ければ，$\theta_m=g_{\mathrm{deg}}n$ として角度を表示できる。2048カウントの変化に対して表示角度は $360^{\circ}$ 変化し，図\ref{fig:res1block}の Gain ブロックと実験1の表示結果に対応する。インクリメンタル形エンコーダは起動位置を原点として数えるため，表示値はディスクの絶対的な向きではなく，計測開始からの回転量である。
+
+図\ref{fig:res1block}では HIL Write に与えた電圧でモータを駆動し，HIL Read の出力を正のゲインで角度に変換している。したがって角度表示の増減はエンコーダが定める回転の正負と一致する。回転を時計回り・反時計回りで表すときは観察する側によって呼び方が逆になるため，観察方向を固定して電圧の極性と対応させる必要がある。
+
+\subsection{Filtering 実験}
+角度をラジアンで扱う場合のセンサゲインは
+\begin{equation}
+ g_{\mathrm{rad}}=\frac{2\pi}{2048}
+ =3.068\times10^{-3}\,\mathrm{rad/count}
+ \label{eq:discrad}
+\end{equation}
+である。エンコーダの出力は連続値ではなく1カウントずつ変わる。制御ループの刻み幅 $T_s=0.002\,\mathrm{s}$ で角度を差分化すると，1カウントの変化だけでも $g_{\mathrm{rad}}/T_s=1.53\,\mathrm{rad/s}$ の速度変化として現れる。図\ref{fig:res2filter}(a)の細かな揺らぎは，この量子化された角度を微分することで強調された成分と考えられる。
+
+一次ローパスフィルタ $50/(s+50)$ のカットオフ角周波数は $50\,\mathrm{rad/s}$ であり，通常の周波数では $50/(2\pi)=7.96\,\mathrm{Hz}$ となる。図\ref{fig:res2filter}の比較では，$10\,\mathrm{rad/s}$ で細かな変動が最も小さく，電圧切替後の立ち上がりは緩やかになった。一方，$200\,\mathrm{rad/s}$ では立ち上がりが速いものの，定常部分の細かな変動が残った。$50\,\mathrm{rad/s}$ は両者の中間的な応答を示している。
+
+フィルタ単独の時定数は $1/\omega_f$ なので，$10$，$50$，$200\,\mathrm{rad/s}$ に対してそれぞれ $0.100$，$0.020$，$0.005\,\mathrm{s}$ となる。低いカットオフ周波数はノイズを強く抑える一方，速度変化の検出を遅らせる。選定に当たっては，定常時の速度表示に必要な滑らかさと，制御に必要な応答速度を比較する必要がある。本実験の波形では $50\,\mathrm{rad/s}$ が，切替時刻を捉えつつ定常部の変動を抑える設定であった。
+
+\subsection{Bump Test Modeling 実験}
+図\ref{fig:res3wave}のステップ入力は $0$ から $2\,\mathrm{V}$ なので，$\Delta u=2\,\mathrm{V}$ である。実測値から求めた定常速度の変化量を $\Delta\omega=46.84\,\mathrm{rad/s}$ とすると，ゲインは
+\begin{equation}
+ K=\frac{\Delta\omega}{\Delta u}
+ =\frac{46.84-0}{2-0}
+ =23.42\,\mathrm{(rad/s)/V}
+ \label{eq:discK}
+\end{equation}
+となる。初期速度をほぼ $0$ とすると，63.2\%に相当する速度は $0.632\times46.84=29.60\,\mathrm{rad/s}$ である。ステップ開始時刻 $t_0=1.000\,\mathrm{s}$ と，この速度に達した時刻 $t_1=1.128\,\mathrm{s}$ から
+\begin{equation}
+ \tau=t_1-t_0=0.128\,\mathrm{s}
+ \label{eq:disctau}
+\end{equation}
+を得る。したがって，実験で求めた速度モデルは式\eqref{eq:resultbump}となる。
+
+図\ref{fig:res3compare}では実測波形とモデル波形の定常値がほぼ一致し，立ち上がりも概ね重なる。このことから，今回の $2\,\mathrm{V}$ ステップに対しては一次遅れモデルで応答を表せる。曲線の細かな差には測定ノイズやフィルタの遅れが含まれる。定常値に系統的な差があれば $K$ を，立ち上がりの速さに差があれば $\tau$ を見直すのが有効である。ただし，電圧条件を変えた場合も同じ定数で説明できるかは，別の入力で確かめる必要がある。
+
+\subsection{First Principles Modeling 実験}
+式\eqref{eq:current}と式\eqref{eq:motion}を組み合わせると，モータの角加速度は
+\begin{equation}
+ \frac{d\omega_m}{dt}
+ =\frac{k_t}{J_{\mathrm{eq}}R_m}
+ \left(v_m-k_m\omega_m\right)
+ \label{eq:discphysical}
+\end{equation}
+となる。図\ref{fig:res4block}のモデルは，入力電圧 $v_m$ から逆起電力 $k_m\omega_m$ を減じ，$1/R_m$ で電流に変換し，$k_t$ でトルク，$1/J_{\mathrm{eq}}$ で角加速度に変換した後，積分して角速度を求める構成である。角速度を $k_m$ 倍して入力側へ戻すことで逆起電力を表している。
+
+式\eqref{eq:discphysical}をラプラス変換して整理すると，印加電圧から角速度までの伝達関数は
+\begin{equation}
+ \frac{\Omega_m(s)}{V_m(s)}
+ =\frac{k_t/(J_{\mathrm{eq}}R_m)}{s+k_tk_m/(J_{\mathrm{eq}}R_m)}
+ =\frac{1/k_m}{\{J_{\mathrm{eq}}R_m/(k_tk_m)\}s+1}
+ \label{eq:discphysicaltf}
+\end{equation}
+となる。表\ref{tab:params}と式\eqref{eq:resultjeq}の値を代入すると，$K_{\mathrm{phys}}=1/k_m=23.81\,\mathrm{(rad/s)/V}$，$\tau_{\mathrm{phys}}=J_{\mathrm{eq}}R_m/(k_tk_m)=0.0995\,\mathrm{s}$ である。バンプテストで得た $K=23.42\,\mathrm{(rad/s)/V}$ との差は約 $1.7\%$ と小さいが，$\tau=0.128\,\mathrm{s}$ との差は実測値を基準として約 $22\%$ ある。
+
+図\ref{fig:res4front}では，$1\,\mathrm{V}$ 区間で計算値が実測値より約 $2\,\mathrm{rad/s}$ 高く，立ち上がりもやや速い。$3\,\mathrm{V}$ 区間の定常速度は両者とも約 $72\,\mathrm{rad/s}$ に近い。物理モデルでは巻線インダクタンスと摩擦を省略し，モータ・ハブ・ディスクを一つの慣性モーメントとして扱っている。この近似に加え，表のパラメータと実機の差，速度推定に用いたフィルタの遅れが，特に過渡応答の差に影響したと考えられる。
+
+\subsection{独自の考察}
+図\ref{fig:res4front}では，$1\,\mathrm{V}$ のとき計算値が約 $24\,\mathrm{rad/s}$，実測値が約 $22\,\mathrm{rad/s}$ であった。一方，$3\,\mathrm{V}$ では両者とも約 $72\,\mathrm{rad/s}$ で，ほぼ一致した。Quanser は同系列の QUBE-Servo 2 について，計算と実測の差には摩擦やモータ定数のずれが関係すると説明している\cite{quanser_friction}。本実験のモデルでも摩擦を省略しているため，低い電圧ではその影響が相対的に目立った可能性がある。確かめるには，$1\,\mathrm{V}$ 未満も含めて電圧を数段階に変え，定常速度の差を比較するとよい。

@@ -1,0 +1,109 @@
+\documentclass[dvipdfmx,a4paper,11pt]{jsarticle}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{jikkenTitle}
+\geometry{left=25mm,right=25mm,top=30mm,bottom=30mm}
+\begin{document}
+\begin{jikkenTitle}
+  \gakunen{8}{4}
+  \numTitle{2}{制御系実験}
+  \subTitle{テーマ二 ２次系及び PD 制御}
+  \jikkenbi{}
+  \kyoudou{}
+  \preYoteibi{}\preTeishutsubi{}\repYoteibi{}\repTeishutsubi{}
+  \hanNumberName{9}{4326}{中野光喜}
+\end{jikkenTitle}
+
+\section*{テーマ二 ２次系及び PD 制御}
+\addcontentsline{toc}{section}{テーマ二 ２次系及び PD 制御}
+\section{目的}
+QUBE-Servo の位置フィードバック制御を通して，二次系の固有振動数と減衰比がステップ応答に及ぼす影響を理解し，ピークタイムと行き過ぎ量を理論値・実測値から求める。さらに，位置偏差の比例制御と角速度の負帰還を組み合わせた PV 位置制御を実装し，指定された応答仕様から制御ゲインを設計・調整する方法を身につける。
+
+\section{関連知識}
+\subsection{二次遅れ系の伝達関数とステップ応答}
+標準的な二次遅れ系の伝達関数は
+\begin{equation}
+ G(s)=\frac{Y(s)}{R(s)}=\frac{\omega_n^2}{s^2+2\zeta\omega_n s+\omega_n^2}
+ \label{eq:standard}
+\end{equation}
+である。$\omega_n$ は固有角振動数 $[\mathrm{rad/s}]$，$\zeta$ は無次元の減衰比を表す。$0<\zeta<1$ の不足減衰系では，減衰角振動数 $\omega_d=\omega_n\sqrt{1-\zeta^2}$ を用いると，時刻 $t=0$ に大きさ $R_0$ のステップ目標値を与えたときの応答は
+\begin{equation}
+ y(t)=R_0\left[1-e^{-\zeta\omega_n t}\left(\cos\omega_d t+\frac{\zeta}{\sqrt{1-\zeta^2}}\sin\omega_d t\right)\right]
+ \label{eq:step2}
+\end{equation}
+となる。この式は $Y(s)=G(s)R_0/s$ を部分分数分解して逆ラプラス変換すると得られる。$\zeta$ が小さいほど振動と行き過ぎが強く，$\omega_n$ が大きいほど応答が速い。
+
+\subsection{ピークタイムと行き過ぎ量}
+最初の最大値を $y_{\max}$，その時刻を $t_{\max}$，ステップ開始時刻を $t_0$ とすれば，ピークタイム $t_p$ と行き過ぎ量 $PO$ は
+\begin{equation}
+ t_p=t_{\max}-t_0,\qquad PO=100\frac{y_{\max}-R_0}{R_0}\quad[\%]
+ \label{eq:measured}
+\end{equation}
+で定義される。式\eqref{eq:step2}を微分すると，最初のピークで $\omega_d t_p=\pi$ となり，
+\begin{equation}
+ t_p=\frac{\pi}{\omega_n\sqrt{1-\zeta^2}},\qquad
+ PO=100\exp\!\left(-\frac{\pi\zeta}{\sqrt{1-\zeta^2}}\right)
+ \label{eq:theory}
+\end{equation}
+を得る\cite{manual}。ステップが $t_0\neq0$ で始まる場合は，式\eqref{eq:step2}の $t$ を $t-t_0$ に置き換える。
+
+\subsection{PID 制御}
+PID 制御は，目標値と測定値の偏差 $e(t)$ に対する比例，積分，微分の三つの作用を組み合わせる。操作量 $u(t)$ は
+\begin{equation}
+ u(t)=k_p e(t)+k_i\int_0^t e(\lambda)\,d\lambda+k_d\frac{de(t)}{dt},\qquad
+ C(s)=k_p+\frac{k_i}{s}+k_d s
+ \label{eq:pid}
+\end{equation}
+で表される。比例項は現在の偏差に，積分項は偏差の蓄積に，微分項は偏差の変化速度に応じて働く。測定ノイズを直接微分すると操作量が大きく揺れるため，微分作用にはフィルタを組み合わせる必要がある。
+
+\subsection{PV 位置制御}
+この実験では積分項を用いず，目標位置 $\theta_d$ と測定位置 $\theta_m$ の偏差を比例増幅し，測定角速度を負帰還する PV 制御を用いる。モータ電圧は
+\begin{equation}
+ v_m(t)=k_p\{\theta_d(t)-\theta_m(t)\}-k_d\dot{\theta}_m(t)
+ \label{eq:pv}
+\end{equation}
+となる。位置の直接微分によるノイズ増幅を抑えるため，実装では $150s/(s+150)$ のフィルタ付き微分器を使う。バンプテストで得る速度モデル $K/(\tau s+1)$ を位置モデル $P(s)=K/[s(\tau s+1)]$ に変換すると，理想微分を仮定した閉ループ伝達関数は
+\begin{equation}
+ G_{\mathrm{PV}}(s)=\frac{\Theta_m(s)}{\Theta_d(s)}
+ =\frac{Kk_p}{\tau s^2+(1+Kk_d)s+Kk_p}
+ \label{eq:closed}
+\end{equation}
+である\cite{manual}。実際のフィルタ付き微分器では式\eqref{eq:closed}は近似モデルとなる。
+
+\subsection{制御ゲインの設計}
+式\eqref{eq:closed}の分母を $\tau$ で割り，式\eqref{eq:standard}と係数を比較すると
+\begin{equation}
+ \omega_n^2=\frac{Kk_p}{\tau},\qquad
+ 2\zeta\omega_n=\frac{1+Kk_d}{\tau}
+ \label{eq:match}
+\end{equation}
+である。したがって，バンプテストで求めた $K$ と $\tau$ を用い，目標の $\omega_n$，$\zeta$ に対するゲインを
+\begin{equation}
+ k_p=\frac{\tau\omega_n^2}{K},\qquad
+ k_d=\frac{2\zeta\omega_n\tau-1}{K}
+ \label{eq:gains}
+\end{equation}
+と設計できる。仕様 $t_p=0.15\,\mathrm{s}$，$PO=2.5\%$ を満たす目標値は，$a=-\ln(PO/100)/\pi$ と置けば
+\begin{equation}
+ \zeta=\frac{a}{\sqrt{1+a^2}},\qquad
+ \omega_n=\frac{\pi}{t_p\sqrt{1-\zeta^2}}
+ \label{eq:targets}
+\end{equation}
+から求める。この仕様から $\zeta\simeq0.761$，$\omega_n\simeq32.3\,\mathrm{rad/s}$ となる。$K$ と $\tau$ はテーマ一の実測値を代入し，設計値を決める。式\eqref{eq:gains}から得た $k_d$ が負になる場合や電圧制限を超える場合は，実装条件を確認してゲインを調整する。
+
+\section{実験方法}
+\subsection{Second-order Systems 実験}
+テーマ一のバンプテストで同定した $K$ と $\tau$ を式\eqref{eq:closed}の $k_p=1$，$k_d=0$ に相当する閉ループ式へ代入し，固有角振動数，減衰比，ピークタイム，行き過ぎ量の理論値を求める。LabVIEW に位置フィードバック制御系を構成し，補償器 $C(s)=1$ とする。シミュレーションの終了時刻を $2.5\,\mathrm{s}$ に設定し，$1\,\mathrm{s}$ 後に目標位置を $1\,\mathrm{rad}$ へステップ状に変える。モータ印加電圧，目標位置，実測位置を Collector で保存し，同じグラフに表示する。XY Graph のカーソルでピーク時刻と最大位置を読み，式\eqref{eq:measured}による実測値を理論値と比較する。
+
+\clearpage
+\subsection{PD Control 実験}
+位置目標を振幅 $0.5\,\mathrm{rad}$，周波数 $0.4\,\mathrm{Hz}$ の方形波に設定し，式\eqref{eq:pv}による PV 位置制御を LabVIEW に実装する。速度帰還には $150s/(s+150)$ を用いる。まず $k_d=0$ に固定して $k_p$ を $1$～$4\,\mathrm{V/rad}$ で変化させ，位置応答への影響を観察する。次に $k_p=2.5\,\mathrm{V/rad}$ に固定し，$k_d$ を $0$～$0.15\,\mathrm{V/(rad/s)}$ に変えて応答を比較する。
+
+続いて，$t_p=0.15\,\mathrm{s}$，$PO=2.5\%$ の仕様から式\eqref{eq:targets}と式\eqref{eq:gains}で $k_p$，$k_d$ を設計する。得られた値で VI を動作させ，モータ電圧，目標位置，実測位置を記録する。電圧が定格の $\pm10\,\mathrm{V}$ を超えないことを確認し，実測応答から $t_p$ と $PO$ を計算する。仕様を満たさない場合はゲインを調整し，調整前後の値と波形を保存する。終了後，VI と QUBE-Servo の電源を停止する。
+
+\begin{thebibliography}{9}
+\bibitem{manual} 電気電子工学実験実習III「LabVIEW と QUBE-Servo を用いた制御系実験」，令和8年版，pp.~19--26, 30--32.
+\end{thebibliography}
+\end{document}

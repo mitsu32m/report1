@@ -1,0 +1,187 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{jikkenTitle}[2026/05/15 CIT experiment report cover]
+
+\RequirePackage{iftex}
+\ifpdf\else
+  \PassOptionsToPackage{dvipdfmx}{graphicx}
+  \PassOptionsToPackage{dvipdfmx}{xcolor}
+\fi
+\RequirePackage{tikz}
+\RequirePackage{ifthen}
+\RequirePackage{eso-pic}
+
+\newcommand{\JT@reiwa}{8}
+\newcommand{\JT@grade}{4}
+\newcommand{\JT@expnum}{}
+\newcommand{\JT@exptitle}{}
+\newcommand{\JT@subtitle}{}
+\newcommand{\JT@jikkenbi}{}
+\newcommand{\JT@kyoudou}{}
+\newcommand{\JT@preyoteibi}{}
+\newcommand{\JT@preteishutsubi}{}
+\newcommand{\JT@repyoteibi}{}
+\newcommand{\JT@repteishutsubi}{}
+\newcommand{\JT@han}{}
+\newcommand{\JT@studentnumber}{}
+\newcommand{\JT@studentname}{}
+
+\newcommand{\JT@school}{東京都立産業技術高等専門学校}
+\newcommand{\JT@course}{電気電子工学コース}
+\newcommand{\JT@subject}{電気電子工学実験実習III}
+
+\newcommand{\jikkenSchool}[1]{\gdef\JT@school{#1}}
+\newcommand{\jikkenCourse}[1]{\gdef\JT@course{#1}}
+\newcommand{\jikkenSubject}[1]{\gdef\JT@subject{#1}}
+
+\newcommand{\gakunen}[2]{%
+  \gdef\JT@reiwa{#1}%
+  \gdef\JT@grade{#2}%
+}
+\newcommand{\numTitle}[2]{%
+  \gdef\JT@expnum{#1}%
+  \gdef\JT@exptitle{#2}%
+}
+\newcommand{\subTitle}[1]{\gdef\JT@subtitle{#1}}
+\newcommand{\jikkenbi}[1]{\gdef\JT@jikkenbi{#1}}
+\newcommand{\kyoudou}[1]{\gdef\JT@kyoudou{#1}}
+\newcommand{\preYoteibi}[1]{\gdef\JT@preyoteibi{#1}}
+\newcommand{\preTeishutsubi}[1]{\gdef\JT@preteishutsubi{#1}}
+\newcommand{\repYoteibi}[1]{\gdef\JT@repyoteibi{#1}}
+\newcommand{\repTeishutsubi}[1]{\gdef\JT@repteishutsubi{#1}}
+\newcommand{\hanNumberName}[3]{%
+  \gdef\JT@han{#1}%
+  \gdef\JT@studentnumber{#2}%
+  \gdef\JT@studentname{#3}%
+}
+
+\newcommand{\JT@reset}{%
+  \gdef\JT@reiwa{8}%
+  \gdef\JT@grade{4}%
+  \gdef\JT@expnum{}%
+  \gdef\JT@exptitle{}%
+  \gdef\JT@subtitle{}%
+  \gdef\JT@jikkenbi{}%
+  \gdef\JT@kyoudou{}%
+  \gdef\JT@preyoteibi{}%
+  \gdef\JT@preteishutsubi{}%
+  \gdef\JT@repyoteibi{}%
+  \gdef\JT@repteishutsubi{}%
+  \gdef\JT@han{}%
+  \gdef\JT@studentnumber{}%
+  \gdef\JT@studentname{}%
+}
+
+\newcommand{\JT@maybeExpTitle}{%
+  \ifthenelse{\equal{\JT@exptitle}{}}%
+    {実験題名}%
+    {実験題名\quad \JT@exptitle}%
+}
+
+\newcommand{\JT@dateText}[1]{%
+  \ifthenelse{\equal{#1}{}}{年\quad 月\quad 日}{#1}%
+}
+
+\newcommand{\JT@drawCover}{%
+  \clearpage
+  \thispagestyle{empty}%
+  \AddToShipoutPictureFG*{%
+  \AtPageLowerLeft{%
+  \begin{tikzpicture}[x=1mm,y=1mm]
+    \path[use as bounding box] (0,0) rectangle (210,297);
+    \begin{scope}[cm={1,0,0,0.908,(0mm,57.5mm)}]
+
+    \node[anchor=north,align=center,font=\normalfont\fontsize{17}{24}\selectfont]
+      at (105,277)
+      {令和 \JT@reiwa 年度第 \JT@grade 学年\JT@subject 報告書};
+
+    \node[anchor=west,font=\bfseries\fontsize{24}{32}\selectfont]
+      at (16.5,252) {\JT@maybeExpTitle};
+
+    \ifthenelse{\equal{\JT@subtitle}{}}{}{%
+      \node[anchor=north west,align=left,text width=177mm,font=\bfseries\fontsize{13}{19}\selectfont]
+        at (16.5,243) {\JT@subtitle};
+    }
+
+    \node[anchor=west,font=\bfseries\fontsize{13}{20}\selectfont]
+      at (70,222.5) {実験日};
+    \node[anchor=west,font=\bfseries\fontsize{13}{20}\selectfont]
+      at (105,222.5) {\JT@dateText{\JT@jikkenbi}};
+
+    \draw[line width=.5pt] (49,206) rectangle ++(112,-20);
+    \draw[line width=.5pt] (77,206) -- ++(0,-20);
+    \draw[line width=.5pt] (105,206) -- ++(0,-20);
+    \node[anchor=north west,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (50,205) {班};
+    \node[anchor=north west,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (78,205) {学生番号};
+    \node[anchor=north west,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (106,205) {氏名};
+    \node[anchor=center,font=\normalfont\fontsize{12}{16}\selectfont]
+      at (63,194) {\JT@han};
+    \node[anchor=center,font=\normalfont\fontsize{12}{16}\selectfont]
+      at (91,194) {\JT@studentnumber};
+    \node[anchor=center,font=\normalfont\fontsize{12}{16}\selectfont]
+      at (133,194) {\JT@studentname};
+
+    \node[anchor=west,font=\bfseries\fontsize{12}{16}\selectfont]
+      at (50,178) {共同実験者名};
+    \node[anchor=west,align=left,font=\normalfont\fontsize{12}{18}\selectfont]
+      at (50,166) {\JT@kyoudou};
+    \draw[line width=.5pt] (49,158) -- ++(112,0);
+    \draw[line width=.5pt] (49,143) -- ++(112,0);
+
+    \draw[line width=.5pt] (21,132.5) rectangle ++(168,-70);
+    \draw[line width=.5pt] (21,127) -- ++(168,0);
+    \draw[line width=.5pt] (21,117) -- ++(168,0);
+    \draw[line width=.5pt] (21,97) -- ++(168,0);
+    \draw[line width=.9pt] (21,96.2) -- ++(168,0);
+    \draw[line width=.5pt] (21,88.5) -- ++(168,0);
+
+    \draw[line width=.5pt] (105,132.5) -- ++(0,-35.5);
+    \draw[line width=.5pt] (49,127) -- ++(0,-30);
+    \draw[line width=.5pt] (77,127) -- ++(0,-30);
+    \draw[line width=.5pt] (133,127) -- ++(0,-30);
+    \draw[line width=.5pt] (161,127) -- ++(0,-30);
+    \draw[line width=.5pt] (161,97) -- ++(0,-34.5);
+
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (63,129.5) {プレレポートの提出};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (147,129.5) {レポートの提出};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (35,122) {予定日};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (119,122) {予定日};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (35,107) {提出日};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (119,107) {提出日};
+    \node[anchor=center,font=\normalfont\fontsize{11}{15}\selectfont]
+      at (77,122) {\JT@preyoteibi};
+    \node[anchor=center,font=\normalfont\fontsize{11}{15}\selectfont]
+      at (77,107) {\JT@preteishutsubi};
+    \node[anchor=center,font=\normalfont\fontsize{11}{15}\selectfont]
+      at (161,122) {\JT@repyoteibi};
+    \node[anchor=center,font=\normalfont\fontsize{11}{15}\selectfont]
+      at (161,107) {\JT@repteishutsubi};
+
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (91,92.5) {備考};
+    \node[anchor=center,font=\bfseries\fontsize{11}{15}\selectfont]
+      at (175,92.5) {評価};
+
+    \node[anchor=center,align=center,font=\bfseries\fontsize{17}{24}\selectfont]
+      at (105,48)
+      {\JT@school\\[-1mm]\JT@course};
+    \end{scope}
+  \end{tikzpicture}%
+  }}%
+  \null
+  \clearpage
+}
+
+\newenvironment{jikkenTitle}{%
+  \JT@reset
+}{%
+  \JT@drawCover
+}
